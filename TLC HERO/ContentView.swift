@@ -6,50 +6,44 @@
 //
 
 import SwiftUI
-import SwiftData
+import WebKit
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
-
+    @StateObject private var networkMonitor = NetworkMonitor()
+    @StateObject private var bridgeManager = BridgeManager.shared
+    @State private var showingSettings = false
+    
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+        ZStack {
+            if networkMonitor.isConnected {
+                MainTabView()
+                    // Bridge Action - Settings
+                    .sheet(isPresented: $bridgeManager.showSettings) {
+                        Text("Settings Page")
+                            .font(.title)
+                            .presentationDetents([.medium])
                     }
-                }
-                .onDelete(perform: deleteItems)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+                    // Handle Logout if needed (e.g. switch to login screen or reset tabs)
+                    .onChange(of: bridgeManager.shouldLogout) { shouldLogout in
+                         if shouldLogout {
+                             // Perform any broader app logout logic here
+                             // For now, we just reset the flag
+                             print("Logged out")
+                             bridgeManager.shouldLogout = false
+                         }
                     }
+            } else {
+                ErrorView {
+                    // Retry action can be handled proactively by network monitor
                 }
             }
-        } detail: {
-            Text("Select an item")
-        }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
+            
+            // Offline Overlay
+            if !networkMonitor.isConnected {
+                ErrorView {
+                    
+                }
+                .zIndex(3)
             }
         }
     }
@@ -57,5 +51,4 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
 }
