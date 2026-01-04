@@ -40,7 +40,15 @@ struct WebViewWrapper: UIViewRepresentable {
         webView.scrollView.bounces = true
         
         // Inject JS helper
-        let js = "window.isNativeIOS = true;"
+        let js = """
+        window.isNativeIOS = true;
+        var style = document.createElement('style');
+        style.innerHTML = `
+          * { -webkit-tap-highlight-color: rgba(0,0,0,0) !important; }
+          a:active, button:active { background-color: rgba(0,0,0,0.1) !important; transition: background-color 0.1s; }
+        `;
+        document.head.appendChild(style);
+        """
         let script = WKUserScript(source: js, injectionTime: .atDocumentStart, forMainFrameOnly: true)
         config.userContentController.addUserScript(script)
         

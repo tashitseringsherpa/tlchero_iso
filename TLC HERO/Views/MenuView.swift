@@ -35,6 +35,11 @@ struct MenuView: View {
             List(menuItems) { item in
                 NavigationLink(destination: 
                     WebViewWrapper(url: baseURL.appendingPathComponent(item.path), isLoading: $isLoading, error: $error)
+                        .overlay {
+                            if isLoading {
+                                LoadingView()
+                            }
+                        }
                         .navigationTitle(item.title)
                         .navigationBarTitleDisplayMode(.inline)
                         .onAppear {

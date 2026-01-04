@@ -30,6 +30,11 @@ struct MainTabView: View {
                     isLoading: binding(for: .home, in: $loadingStates),
                     error: binding(for: .home, in: $errors)
                 )
+                .overlay {
+                    if loadingStates[.home] == true {
+                        LoadingView()
+                    }
+                }
                 .navigationTitle("Home")
                 .navigationBarTitleDisplayMode(.inline)
             }
@@ -45,6 +50,11 @@ struct MainTabView: View {
                     isLoading: binding(for: .buzz, in: $loadingStates),
                     error: binding(for: .buzz, in: $errors)
                 )
+                .overlay {
+                    if loadingStates[.buzz] == true {
+                        LoadingView()
+                    }
+                }
                 .navigationTitle("Buzz")
                 .navigationBarTitleDisplayMode(.inline)
             }
@@ -60,6 +70,11 @@ struct MainTabView: View {
                     isLoading: binding(for: .flights, in: $loadingStates),
                     error: binding(for: .flights, in: $errors)
                 )
+                .overlay {
+                    if loadingStates[.flights] == true {
+                        LoadingView()
+                    }
+                }
                 .navigationTitle("Flights")
                 .navigationBarTitleDisplayMode(.inline)
             }
@@ -75,6 +90,11 @@ struct MainTabView: View {
                     isLoading: binding(for: .market, in: $loadingStates),
                     error: binding(for: .market, in: $errors)
                 )
+                .overlay {
+                    if loadingStates[.market] == true {
+                        LoadingView()
+                    }
+                }
                 .navigationTitle("Market")
                 .navigationBarTitleDisplayMode(.inline)
             }
