@@ -7,45 +7,18 @@
 
 import SwiftUI
 
-struct MenuItem: Identifiable {
-    let id = UUID()
-    let title: String
-    let icon: String
-    let path: String
-}
-
 struct MenuView: View {
-    let baseURL = URL(string: "https://tlchero.com")!
+//    let baseURL = URL(string: "https://tlchero.com")!
+    let baseURL = URL(string: "http://localhost:9002/")!
     
-    let menuItems = [
-        MenuItem(title: "Inbox", icon: "envelope", path: "messages"),
-        MenuItem(title: "Dashboard", icon: "gauge", path: "dashboard"),
-        MenuItem(title: "My Listing", icon: "list.bullet.rectangle", path: "marketplace?view=mine"),
-        MenuItem(title: "Active Vehicles & Drivers", icon: "car.2.fill", path: "tlc-data"),
-        MenuItem(title: "Suspended Vehicles & Drivers", icon: "exclamationmark.triangle.fill", path: "tlc-suspended"),
-        MenuItem(title: "Market Trend", icon: "chart.line.uptrend.xyaxis", path: "market-insights")
-        // "Settings" and "Logout" could also be here or handled via Bridge
-    ]
-    
+    @ObservedObject var tabManager: TabManager
     @Binding var isLoading: Bool
     @Binding var error: Error?
     
     var body: some View {
-        NavigationStack {
-            List(menuItems) { item in
-                NavigationLink(destination: 
-                    WebViewWrapper(url: baseURL.appendingPathComponent(item.path), isLoading: $isLoading, error: $error)
-                        .overlay {
-                            if isLoading {
-                                LoadingView()
-                            }
-                        }
-                        .navigationTitle(item.title)
-                        .navigationBarTitleDisplayMode(.inline)
-                        .onAppear {
-                            // Reset any webview specific state if needed
-                        }
-                ) {
+        NavigationStack(path: $tabManager.menuPath) {
+            List(MenuItem.allItems) { item in
+                NavigationLink(value: item) {
                     HStack {
                         Image(systemName: item.icon)
                             .foregroundColor(.blue)
@@ -57,6 +30,19 @@ struct MenuView: View {
             }
             .navigationTitle("Menu")
             .listStyle(.insetGrouped)
+            .navigationDestination(for: MenuItem.self) { item in
+                WebViewWrapper(url: baseURL.appendingPathComponent(item.path), isLoading: $isLoading, error: $error)
+                    .overlay {
+                        if isLoading {
+                            LoadingView()
+                        }
+                    }
+                    .navigationTitle(item.title)
+                    .navigationBarTitleDisplayMode(.inline)
+                    .onAppear {
+                        // Reset any webview specific state if needed
+                    }
+            }
         }
     }
 }

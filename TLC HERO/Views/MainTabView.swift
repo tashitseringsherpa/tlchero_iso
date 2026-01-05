@@ -18,10 +18,25 @@ struct MainTabView: View {
     @State private var loadingStates: [TabItem: Bool] = [:]
     @State private var errors: [TabItem: Error?] = [:]
     
-    private let baseURL = URL(string: "https://tlchero.com")!
+//    private let baseURL = URL(string: "https://tlchero.com")!
+    private let baseURL = URL(string: "http://localhost:9002/")!
+    
+    @State private var homeReloadID = UUID() // Force reload logic
+    @State private var bridgeDebugText = "Waiting for bridge..." // Debugging
     
     var body: some View {
-        TabView(selection: $tabManager.selectedTab) {
+        TabView(selection: Binding(
+            get: { tabManager.selectedTab },
+            set: { newTab in
+                if newTab == tabManager.selectedTab && newTab == .home {
+                    // Reset Home
+                    print("Resetting Home Tab")
+                    homeReloadID = UUID() // Triggers WebView update
+                    tabManager.selectTab(for: "/") // Ensure internal state is home
+                }
+                tabManager.selectedTab = newTab
+            }
+        )) {
             
             // Home Tab
             NavigationStack {
@@ -30,13 +45,14 @@ struct MainTabView: View {
                     isLoading: binding(for: .home, in: $loadingStates),
                     error: binding(for: .home, in: $errors)
                 )
+                .ignoresSafeArea(.all, edges: .top) // Match PWA background
+                .id(homeReloadID) // Force recreation on reset
                 .overlay {
                     if loadingStates[.home] == true {
                         LoadingView()
                     }
                 }
-                .navigationTitle("Home")
-                .navigationBarTitleDisplayMode(.inline)
+                .toolbar(.hidden, for: .navigationBar)
             }
             .tabItem {
                 Label("Home", systemImage: TabItem.home.icon)
@@ -50,13 +66,14 @@ struct MainTabView: View {
                     isLoading: binding(for: .buzz, in: $loadingStates),
                     error: binding(for: .buzz, in: $errors)
                 )
+                .ignoresSafeArea(.all, edges: .top) // Match PWA background
                 .overlay {
                     if loadingStates[.buzz] == true {
                         LoadingView()
                     }
                 }
-                .navigationTitle("Buzz")
-                .navigationBarTitleDisplayMode(.inline)
+                // .navigationTitle("Buzz") // Hide native title to use PWA header
+                .toolbar(.hidden, for: .navigationBar)
             }
             .tabItem {
                 Label("Buzz", systemImage: TabItem.buzz.icon)
@@ -70,13 +87,14 @@ struct MainTabView: View {
                     isLoading: binding(for: .flights, in: $loadingStates),
                     error: binding(for: .flights, in: $errors)
                 )
+                .ignoresSafeArea(.all, edges: .top) // Match PWA background
                 .overlay {
                     if loadingStates[.flights] == true {
                         LoadingView()
                     }
                 }
-                .navigationTitle("Flights")
-                .navigationBarTitleDisplayMode(.inline)
+                // .navigationTitle("Flights")
+                .toolbar(.hidden, for: .navigationBar)
             }
             .tabItem {
                 Label("Flights", systemImage: TabItem.flights.icon)
@@ -90,13 +108,14 @@ struct MainTabView: View {
                     isLoading: binding(for: .market, in: $loadingStates),
                     error: binding(for: .market, in: $errors)
                 )
+                .ignoresSafeArea(.all, edges: .top) // Match PWA background
                 .overlay {
                     if loadingStates[.market] == true {
                         LoadingView()
                     }
                 }
-                .navigationTitle("Market")
-                .navigationBarTitleDisplayMode(.inline)
+                // .navigationTitle("Market")
+                .toolbar(.hidden, for: .navigationBar)
             }
             .tabItem {
                 Label("Market", systemImage: TabItem.market.icon)
@@ -105,6 +124,7 @@ struct MainTabView: View {
             
             // Menu Tab
             MenuView(
+                tabManager: tabManager,
                 isLoading: binding(for: .menu, in: $loadingStates),
                 error: binding(for: .menu, in: $errors)
             )
@@ -128,6 +148,8 @@ struct MainTabView: View {
         // Listen for Route Updates from Bridge (JS or Fallback)
         .onReceive(BridgeManager.shared.$activeRoute) { route in
             if let route = route {
+                print("MainTabView received route: \(route)")
+                bridgeDebugText = "Route: \(route)"
                 tabManager.selectTab(for: route)
             }
         }
