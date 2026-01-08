@@ -18,8 +18,8 @@ struct MainTabView: View {
     @State private var loadingStates: [TabItem: Bool] = [:]
     @State private var errors: [TabItem: Error?] = [:]
     
-//    private let baseURL = URL(string: "https://tlchero.com")!
-    private let baseURL = URL(string: "http://localhost:9002/")!
+   private let baseURL = URL(string: "https://tlchero.com")!
+    // private let baseURL = URL(string: "http://localhost:9002/")!
     
     @State private var homeReloadID = UUID() // Force reload logic
     @State private var bridgeDebugText = "Waiting for bridge..." // Debugging
